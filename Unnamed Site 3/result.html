@@ -1,1 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Your Photostrip</title>
 
+<style>
+body {
+    font-family: Arial;
+    background: #f4efe6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.photo-frame {
+    position: relative;
+    width: 360px;
+    height: 520px;
+    background: white;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+.photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.frame-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+h2 {
+    margin-top: 0;
+    color: #4b4377;
+}
+
+.email-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.email-section input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #948fbd;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    margin-bottom: 30px;
+    align-items: center;
+    justify-content: center;
+}
+
+button {
+    padding: 10px 20px;
+    background: #948fbd;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #7d7699;
+}
+
+button.home-btn {
+    background: #333;
+}
+
+button.home-btn:hover {
+    background: #555;
+}
+
+.message {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    display: none;
+}
+
+.message.success {
+    background: #d4edda;
+    color: #155724;
+    display: block;
+}
+
+.message.error {
+    background: #f8d7da;
+    color: #721c24;
+    display: block;
+}
+</style>
+
+</head>
+
+<body>
+<div class="container">
+    <h2>Your Photostrip</h2>
+
+    <div class="photo-frame">
+        <img id="photo1-display" style="width:100%; height:50%; object-fit:cover; position:absolute; top:0; left:0;">
+        <img id="photo2-display" style="width:100%; height:50%; object-fit:cover; position:absolute; bottom:0; left:0;">
+        <img class="frame-overlay" src="photobooth frame x2.png">
+    </div>
+
+    <div class="email-section">
+        <input type="email" id="emailInput" placeholder="Enter your email to receive photos">
+        <div class="button-container">
+            <button onclick="sendEmail()">Send to Email</button>
+            <button class="home-btn" onclick="goHome()">Home</button>
+        </div>
+    </div>
+
+    <div id="message" class="message"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/build/index.min.js"></script>
+
+<script>
+// EmailJS Configuration
+const EMAILJS_PUBLIC_KEY = "ObUc9_e6RpvpdHJyD";
+const EMAILJS_SERVICE_ID = "service_3gln22k";
+const EMAILJS_TEMPLATE_ID = "template_fi96548";
+
+// Initialize EmailJS
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+// Get DOM elements
+const photo1Display = document.getElementById("photo1-display");
+const photo2Display = document.getElementById("photo2-display");
+const messageDiv = document.getElementById("message");
+
+// Load photos from localStorage
+const photo1Data = localStorage.getItem("photo1");
+const photo2Data = localStorage.getItem("photo2");
+const photostripData = localStorage.getItem("photostrip");
+
+if (photo1Data) {
+    photo1Display.src = photo1Data;
+}
+
+if (photo2Data) {
+    photo2Display.src = photo2Data;
+}
+
+// Show message function
+function showMessage(text, type) {
+    messageDiv.innerText = text;
+    messageDiv.className = "message " + type;
+    setTimeout(function() {
+        messageDiv.className = "message";
+    }, 4000);
+}
+
+// Send email function
+function sendEmail() {
+    const email = document.getElementById("emailInput").value.trim();
+
+    if (!email) {
+        showMessage("Please enter an email address", "error");
+        return;
+    }
+
+    if (!email.includes("@")) {
+        showMessage("Please enter a valid email address", "error");
+        return;
+    }
+
+    // Show loading state
+    const button = document.querySelector('button[onclick="sendEmail()"]');
+    button.innerText = "Sending...";
+    button.disabled = true;
+
+    // Prepare email parameters
+    const templateParams = {
+        to_email: email,
+        user_email: email,
+        message: "Here are your photobooth photos!",
+        photo: photostripData
+    };
+
+    // Send email using EmailJS
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+        .then(function(response) {
+            console.log("Email sent successfully:", response);
+            showMessage("Email sent successfully!", "success");
+            button.innerText = "Sent!";
+            button.style.background = "#28a745";
+        }, function(error) {
+            console.error("Email send failed:", error);
+            showMessage("Failed to send email. Please try again.", "error");
+            button.innerText = "Send to Email";
+            button.disabled = false;
+        });
+}
+
+// Home function
+function goHome() {
+    window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
