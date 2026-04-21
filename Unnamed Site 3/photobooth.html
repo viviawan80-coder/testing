@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Photobooth</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4efe6;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:40px;
+margin-top:40px;
+}
+
+/* photostrip */
+
+#photobooth{
+width:360px;
+height:520px;
+background:white;
+position:relative;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+padding:15px;
+}
+
+.grid{
+display:grid;
+grid-template-rows:1fr 1fr;
+gap:12px;
+height:78%;
+}
+
+canvas{
+width:100%;
+height:100%;
+background:#ddd;
+}
+
+/* frame overlay */
+
+#frameOverlay{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+pointer-events:none;
+}
+
+/* camera preview */
+
+#cameraBox{
+text-align:center;
+}
+
+video{
+width:280px;
+border-radius:10px;
+transform:scaleX(-1);
+}
+
+#countdown{
+font-size:42px;
+font-weight:bold;
+margin-top:10px;
+}
+
+button{
+margin-top:12px;
+padding:10px 22px;
+border:none;
+background:#948fbd;
+color:white;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="photobooth">
+
+<div class="grid">
+
+<canvas id="photo1" width="330" height="200"></canvas> <canvas id="photo2" width="330" height="200"></canvas>
+
+</div>
+
+<img id="frameOverlay" src="photobooth frame x2.png">
+
+</div>
+
+<div id="cameraBox">
+
+<video id="video" autoplay playsinline></video>
+
+<div id="countdown"></div>
+
+<button onclick="startBooth()">Take Picture</button>
+
+	
+
+</div>
+
+<script>
+
+const video=document.getElementById("video");
+
+async function startCamera(){
+
+try{
+
+const stream=await navigator.mediaDevices.getUserMedia({
+video:true,
+audio:false
+});
+
+video.srcObject=stream;
+
+}catch(err){
+
+alert("Camera permission needed.");
+
+}
+
+}
+
+startCamera();
+
+let shot = 1;
+let isTakingPhoto = false;
+
+function startBooth(){
+  shot = 1;
+  isTakingPhoto = false;
+  const button = document.querySelector("button");
+  button.innerText = "Take Picture";
+  button.onclick = startBooth;
+  takePhoto();
+}
+
+function takePhoto(){
+  if(shot > 2){
+    finishBooth();
+    return;
+  }
+
+  if(isTakingPhoto) return; // Prevent multiple clicks during countdown
+  isTakingPhoto = true;
+
+  let count = 3;
+  const countdown = document.getElementById("countdown");
+  const button = document.querySelector("button");
+
+  const timer = setInterval(()=>{
+    countdown.innerText = count;
+    count--;
+
+    if(count < 0){
+      clearInterval(timer);
+      countdown.innerText="";
+
+      const canvas = document.getElementById("photo"+shot);
+      const ctx = canvas.getContext("2d");
+
+      /* mirror capture */
+      ctx.save();
+      ctx.scale(-1,1);
+      ctx.drawImage(video,-canvas.width,0,canvas.width,canvas.height);
+      ctx.restore();
+
+      shot++;
+      isTakingPhoto = false;
+
+      if(shot <= 2){
+        button.innerText = "Take Picture " + shot;
+        button.onclick = takePhoto;
+      } else {
+        finishBooth();
+      }
+    }
+  },1000);
+}
+
+function finishBooth(){
+
+console.log("finishBooth called");
+
+const finalCanvas = document.createElement("canvas");
+finalCanvas.width = 300;
+finalCanvas.height = 500;
+
+const ctx = finalCanvas.getContext("2d");
+
+/* white background */
+
+ctx.fillStyle="white";
+ctx.fillRect(0,0,300,500);
+
+const p1=document.getElementById("photo1");
+const p2=document.getElementById("photo2");
+
+ctx.drawImage(p1,0,0,300,200);
+ctx.drawImage(p2,0,210,300,200);
+
+console.log("Photos drawn to canvas");
+
+/* draw frame overlay */
+
+const frame=new Image();
+
+frame.onload=function(){
+  console.log("Frame loaded successfully");
+  ctx.drawImage(frame,0,0,300,500);
+
+  const imageData=finalCanvas.toDataURL();
+
+  localStorage.setItem("photostrip",imageData);
+
+  console.log("Redirecting to result.html");
+  window.location.href="result.html";
+
+};
+
+frame.onerror=function(){
+  console.log("Frame failed to load, proceeding without frame");
+  const imageData=finalCanvas.toDataURL();
+
+  localStorage.setItem("photostrip",imageData);
+
+  console.log("Redirecting to result.html");
+  window.location.href="result.html";
+
+};
+
+// Set a timeout to redirect even if frame doesn't load/fail
+setTimeout(function(){
+  console.log("Timeout reached, redirecting anyway");
+  const imageData=finalCanvas.toDataURL();
+  localStorage.setItem("photostrip",imageData);
+  window.location.href="result.html";
+}, 2000);
+
+frame.src="photobooth frame x2.png";
+console.log("Frame src set to: photobooth frame x2.png");
+
+}
+
+			  
+</script>
+
+</body>
+</html>
+			  

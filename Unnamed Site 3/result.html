@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Your Photostrip</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4efe6;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
+}
+
+img{
+width:300px;
+height:500px;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+button{
+margin-top:20px;
+padding:12px 24px;
+font-size:16px;
+border:none;
+background:black;
+color:white;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Your Photobooth</h2>
+
+<img id="strip">
+
+<button onclick="download()">Download Photo</button>
+
+<button onclick="goHome()">Home</button>
+
+<script>
+
+const strip=document.getElementById("strip");
+
+const imageData=localStorage.getItem("photostrip");
+
+strip.src=imageData;
+
+function download(){
+
+const link=document.createElement("a");
+
+link.download="photobooth.png";
+link.href=imageData;
+link.click();
+
+}
+
+function goHome(){
+
+window.location.href="index.html";
+
+}
+
+</script>
+
+</body>
+</html>
